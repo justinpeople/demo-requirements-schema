@@ -1,0 +1,472 @@
+{
+  "project_name": "AIスライド生成Webアプリ",
+  "version": "1.0.0",
+
+  "screens": [
+    {
+      "id": "dashboard",
+      "name": "ダッシュボード",
+      "description": "作成したスライドの一覧とクイックアクション",
+      "priority": "must",
+      "path": "/",
+      "layout": "dashboard",
+      "components": [
+        {
+          "id": "stats-cards",
+          "type": "stats",
+          "position": "main",
+          "stats": [
+            { "label": "作成したスライド", "value_source": "slides.total", "format": "number" },
+            { "label": "今月の生成数", "value_source": "slides.this_month", "format": "number", "trend": true },
+            { "label": "平均生成時間", "value_source": "slides.avg_generation_time", "format": "duration" },
+            { "label": "利用可能クレジット", "value_source": "user.credits", "format": "number" }
+          ]
+        },
+        {
+          "id": "recent-slides",
+          "type": "list",
+          "position": "main",
+          "title": "最近のスライド"
+        },
+        {
+          "id": "templates",
+          "type": "card",
+          "position": "sidebar",
+          "title": "テンプレート"
+        }
+      ],
+      "actions": {
+        "primary": { "label": "新規スライド作成", "icon": "plus", "action": "navigate:/slides/new" }
+      }
+    },
+    {
+      "id": "slide-create",
+      "name": "スライド作成",
+      "description": "AIを使ってスライドを自動生成",
+      "priority": "must",
+      "path": "/slides/new",
+      "layout": "form-centered",
+      "components": [
+        {
+          "id": "create-form",
+          "type": "form",
+          "position": "main",
+          "fields": [
+            { "name": "title", "label": "タイトル", "type": "text", "required": true, "placeholder": "例: 新製品の提案資料" },
+            { "name": "content", "label": "内容・キーワード", "type": "textarea", "required": true, "placeholder": "スライドに含めたい内容やキーワードを入力してください", "col_span": 2 },
+            { "name": "slide_count", "label": "スライド枚数", "type": "select", "options": [
+              { "value": "5", "label": "5枚（簡潔）" },
+              { "value": "10", "label": "10枚（標準）" },
+              { "value": "15", "label": "15枚（詳細）" },
+              { "value": "20", "label": "20枚（フル）" }
+            ]},
+            { "name": "style", "label": "デザインスタイル", "type": "select", "options": [
+              { "value": "professional", "label": "プロフェッショナル" },
+              { "value": "creative", "label": "クリエイティブ" },
+              { "value": "minimal", "label": "ミニマル" },
+              { "value": "colorful", "label": "カラフル" }
+            ]},
+            { "name": "template", "label": "テンプレート", "type": "select", "options": [
+              { "value": "business", "label": "ビジネス提案" },
+              { "value": "pitch", "label": "ピッチデッキ" },
+              { "value": "report", "label": "レポート" },
+              { "value": "education", "label": "教育・研修" }
+            ]},
+            { "name": "language", "label": "言語", "type": "select", "options": [
+              { "value": "ja", "label": "日本語" },
+              { "value": "en", "label": "English" }
+            ]}
+          ],
+          "submit_label": "AIでスライド生成"
+        }
+      ]
+    },
+    {
+      "id": "slide-generating",
+      "name": "生成中",
+      "description": "AIがスライドを生成している画面",
+      "priority": "must",
+      "path": "/slides/generating/{id}",
+      "layout": "detail",
+      "components": [
+        {
+          "id": "progress",
+          "type": "card",
+          "position": "main",
+          "title": "スライド生成中..."
+        }
+      ]
+    },
+    {
+      "id": "slide-preview",
+      "name": "スライドプレビュー",
+      "description": "生成されたスライドのプレビューと編集",
+      "priority": "must",
+      "path": "/slides/{id}",
+      "layout": "split",
+      "parent_screen": "dashboard",
+      "components": [
+        {
+          "id": "slide-viewer",
+          "type": "card",
+          "position": "main",
+          "title": "スライドビューアー"
+        },
+        {
+          "id": "slide-list",
+          "type": "list",
+          "position": "sidebar",
+          "title": "スライド一覧"
+        },
+        {
+          "id": "edit-panel",
+          "type": "form",
+          "position": "sidebar",
+          "title": "編集パネル"
+        }
+      ],
+      "actions": {
+        "primary": { "label": "ダウンロード", "icon": "download", "action": "download_pptx" },
+        "secondary": [
+          { "label": "再生成", "icon": "refresh", "action": "regenerate" },
+          { "label": "PDFエクスポート", "icon": "file", "action": "export_pdf" },
+          { "label": "共有", "icon": "share", "action": "open_modal:share" }
+        ]
+      }
+    },
+    {
+      "id": "slide-list",
+      "name": "スライド一覧",
+      "description": "作成したスライドの一覧",
+      "priority": "must",
+      "path": "/slides",
+      "layout": "list",
+      "components": [
+        {
+          "id": "slides-grid",
+          "type": "table",
+          "position": "main",
+          "columns": [
+            { "key": "thumbnail", "label": "", "type": "image" },
+            { "key": "title", "label": "タイトル", "type": "link", "link_to": "/slides/{id}", "sortable": true },
+            { "key": "slide_count", "label": "枚数", "type": "number" },
+            { "key": "style", "label": "スタイル", "type": "badge" },
+            { "key": "created_at", "label": "作成日", "type": "date", "sortable": true },
+            { "key": "actions", "label": "", "type": "actions" }
+          ],
+          "pagination": "numbered",
+          "row_actions": ["view", "download", "duplicate", "delete"]
+        }
+      ],
+      "responsive": {
+        "mobile": { "table_to_cards": true }
+      },
+      "actions": {
+        "primary": { "label": "新規作成", "icon": "plus", "action": "navigate:/slides/new" }
+      }
+    },
+    {
+      "id": "templates",
+      "name": "テンプレート一覧",
+      "description": "利用可能なテンプレートの一覧",
+      "priority": "should",
+      "path": "/templates",
+      "layout": "list",
+      "components": [
+        {
+          "id": "template-grid",
+          "type": "card",
+          "position": "main",
+          "title": "テンプレート"
+        }
+      ]
+    },
+    {
+      "id": "settings",
+      "name": "設定",
+      "description": "ユーザー設定とアカウント管理",
+      "priority": "should",
+      "path": "/settings",
+      "layout": "settings",
+      "components": [
+        {
+          "id": "account-settings",
+          "type": "form",
+          "position": "main",
+          "title": "アカウント設定"
+        },
+        {
+          "id": "usage-stats",
+          "type": "stats",
+          "position": "main",
+          "title": "利用状況"
+        }
+      ]
+    }
+  ],
+
+  "design": {
+    "references": [
+      { "name": "Canva", "like": "直感的なインターフェース、テンプレートの見せ方" },
+      { "name": "Beautiful.ai", "like": "AIによる自動レイアウト調整" },
+      { "name": "Gamma", "like": "シンプルでモダンなデザイン" }
+    ],
+    "keywords": ["モダン", "クリーン", "プロフェッショナル", "直感的"],
+    "avoid": ["ごちゃごちゃ", "派手すぎる色", "古臭いデザイン"],
+    "tone": "professional",
+    "colors": {
+      "primary": "#6366F1",
+      "primary_light": "#818CF8",
+      "primary_dark": "#4F46E5",
+      "success": "#10B981",
+      "warning": "#F59E0B",
+      "error": "#EF4444",
+      "background": "#FFFFFF",
+      "foreground": "#1E293B"
+    },
+    "dark_mode": "toggle"
+  },
+
+  "entities": [
+    {
+      "name": "Slide",
+      "japanese_name": "スライド",
+      "fields": [
+        { "name": "id", "type": "string", "japanese_name": "ID", "required": true, "auto_generate": "uuid" },
+        { "name": "title", "type": "string", "japanese_name": "タイトル", "required": true, "searchable": true },
+        { "name": "content", "type": "string", "japanese_name": "内容", "required": true },
+        { "name": "slide_count", "type": "number", "japanese_name": "スライド枚数", "required": true },
+        { "name": "style", "type": "enum", "japanese_name": "スタイル", "required": true, "enum_values": ["professional", "creative", "minimal", "colorful"] },
+        { "name": "template", "type": "enum", "japanese_name": "テンプレート", "required": true, "enum_values": ["business", "pitch", "report", "education"] },
+        { "name": "language", "type": "enum", "japanese_name": "言語", "required": true, "enum_values": ["ja", "en"] },
+        { "name": "status", "type": "enum", "japanese_name": "ステータス", "required": true, "enum_values": ["generating", "completed", "failed"], "display": { "component": "badge", "color_map": { "generating": "yellow", "completed": "green", "failed": "red" }}},
+        { "name": "slides_data", "type": "json", "japanese_name": "スライドデータ", "required": false },
+        { "name": "thumbnail_url", "type": "string", "japanese_name": "サムネイル", "required": false },
+        { "name": "pptx_url", "type": "string", "japanese_name": "PPTXファイル", "required": false },
+        { "name": "user_id", "type": "relation", "japanese_name": "ユーザー", "required": true, "relation_to": "User" },
+        { "name": "created_at", "type": "datetime", "japanese_name": "作成日時", "required": true, "auto_generate": "timestamp" }
+      ],
+      "sample_count": 15,
+      "sample_data": [
+        { "id": "1", "title": "Q4売上レポート", "slide_count": 10, "style": "professional", "status": "completed" },
+        { "id": "2", "title": "新製品ピッチデッキ", "slide_count": 15, "style": "creative", "status": "completed" },
+        { "id": "3", "title": "社内研修資料", "slide_count": 20, "style": "minimal", "status": "generating" }
+      ],
+      "display_rules": {
+        "title_field": "title",
+        "badge_field": "status"
+      }
+    },
+    {
+      "name": "Template",
+      "japanese_name": "テンプレート",
+      "fields": [
+        { "name": "id", "type": "string", "japanese_name": "ID", "required": true, "auto_generate": "uuid" },
+        { "name": "name", "type": "string", "japanese_name": "テンプレート名", "required": true },
+        { "name": "category", "type": "enum", "japanese_name": "カテゴリ", "required": true, "enum_values": ["business", "pitch", "report", "education", "marketing"] },
+        { "name": "thumbnail_url", "type": "string", "japanese_name": "サムネイル", "required": true },
+        { "name": "is_premium", "type": "boolean", "japanese_name": "プレミアム", "required": true },
+        { "name": "usage_count", "type": "number", "japanese_name": "利用回数", "required": false }
+      ],
+      "sample_count": 20
+    },
+    {
+      "name": "User",
+      "japanese_name": "ユーザー",
+      "fields": [
+        { "name": "id", "type": "string", "japanese_name": "ID", "required": true, "auto_generate": "uuid" },
+        { "name": "email", "type": "email", "japanese_name": "メールアドレス", "required": true },
+        { "name": "name", "type": "string", "japanese_name": "名前", "required": true },
+        { "name": "plan", "type": "enum", "japanese_name": "プラン", "required": true, "enum_values": ["free", "pro", "enterprise"] },
+        { "name": "credits", "type": "number", "japanese_name": "クレジット", "required": true },
+        { "name": "created_at", "type": "datetime", "japanese_name": "登録日", "required": true, "auto_generate": "timestamp" }
+      ],
+      "sample_count": 10
+    }
+  ],
+
+  "workflows": [
+    {
+      "id": "wf-create-slide",
+      "name": "スライド作成フロー",
+      "trigger": "新しいプレゼン資料を作成したい時",
+      "goal": "AIを使ってスライドを自動生成する",
+      "is_demo_scenario": true,
+      "steps": [
+        {
+          "order": 1,
+          "screen": "dashboard",
+          "action": "「新規スライド作成」ボタンをクリック",
+          "expected_result": "スライド作成フォームに遷移",
+          "guide_message": "新規スライド作成ボタンをクリックしてください"
+        },
+        {
+          "order": 2,
+          "screen": "slide-create",
+          "action": "タイトルと内容を入力",
+          "expected_result": "フォームが入力された状態",
+          "pre_filled": { "title": "新製品発表プレゼン", "content": "革新的なAI技術を活用した新製品の紹介。主な機能、競合との差別化、価格戦略について" },
+          "highlight_fields": ["title", "content"]
+        },
+        {
+          "order": 3,
+          "screen": "slide-create",
+          "action": "スライド枚数とスタイルを選択",
+          "expected_result": "オプションが選択された状態",
+          "pre_filled": { "slide_count": "10", "style": "professional" }
+        },
+        {
+          "order": 4,
+          "screen": "slide-create",
+          "action": "「AIでスライド生成」ボタンをクリック",
+          "expected_result": "生成中画面に遷移"
+        },
+        {
+          "order": 5,
+          "screen": "slide-generating",
+          "action": "生成完了を待つ",
+          "expected_result": "プログレスバーが100%になり、プレビュー画面に遷移"
+        },
+        {
+          "order": 6,
+          "screen": "slide-preview",
+          "action": "生成されたスライドを確認",
+          "expected_result": "スライドビューアーにプレビューが表示される"
+        }
+      ],
+      "success_behavior": {
+        "celebration": "confetti",
+        "message": "スライドが生成されました！",
+        "redirect_to": "/slides/{id}",
+        "redirect_delay_ms": 1000
+      },
+      "error_scenarios": [
+        {
+          "name": "クレジット不足",
+          "trigger": "ユーザーのクレジットが0の場合",
+          "expected_behavior": "生成ボタンが無効化",
+          "ui_feedback": "クレジットを購入してくださいというメッセージが表示",
+          "error_type": "validation"
+        },
+        {
+          "name": "生成失敗",
+          "trigger": "AIの生成に失敗した場合",
+          "expected_behavior": "エラー画面を表示",
+          "ui_feedback": "再試行ボタンを表示",
+          "error_type": "system"
+        }
+      ],
+      "demo_data": {
+        "title": "新製品発表プレゼン",
+        "content": "革新的なAI技術を活用した新製品の紹介。主な機能、競合との差別化、価格戦略について",
+        "slide_count": "10",
+        "style": "professional",
+        "template": "pitch",
+        "language": "ja"
+      },
+      "estimated_duration_seconds": 45
+    },
+    {
+      "id": "wf-edit-slide",
+      "name": "スライド編集フロー",
+      "trigger": "生成されたスライドを編集したい時",
+      "goal": "スライドの内容やデザインを調整する",
+      "is_demo_scenario": true,
+      "steps": [
+        {
+          "order": 1,
+          "screen": "slide-preview",
+          "action": "編集したいスライドをクリック",
+          "expected_result": "編集パネルが表示される"
+        },
+        {
+          "order": 2,
+          "screen": "slide-preview",
+          "action": "テキストを編集",
+          "expected_result": "リアルタイムでプレビューに反映"
+        },
+        {
+          "order": 3,
+          "screen": "slide-preview",
+          "action": "「ダウンロード」ボタンをクリック",
+          "expected_result": "PPTXファイルがダウンロードされる"
+        }
+      ],
+      "success_behavior": {
+        "celebration": "toast",
+        "message": "ダウンロードを開始しました"
+      }
+    }
+  ],
+
+  "navigation": {
+    "sidebar": {
+      "style": "full",
+      "position": "left",
+      "width": 240,
+      "items": [
+        { "id": "dashboard", "icon": "home", "label": "ダッシュボード", "path": "/" },
+        { "id": "slides", "icon": "presentation", "label": "スライド", "path": "/slides" },
+        { "id": "templates", "icon": "layout", "label": "テンプレート", "path": "/templates" }
+      ],
+      "footer_items": [
+        { "id": "settings", "icon": "settings", "label": "設定", "path": "/settings" }
+      ],
+      "show_user_info": true,
+      "user_info_position": "bottom"
+    },
+    "breadcrumb": {
+      "show": true,
+      "include_home": true,
+      "separator": "chevron"
+    },
+    "mobile": {
+      "navigation_type": "hamburger",
+      "show_back_button": true
+    }
+  },
+
+  "roles": [
+    {
+      "id": "free",
+      "name": "無料ユーザー",
+      "description": "基本機能のみ利用可能",
+      "permissions": ["create", "read"],
+      "accessible_screens": ["dashboard", "slide-create", "slide-preview", "slide-list"],
+      "ui_differences": {
+        "hide_elements": ["premium-templates"],
+        "show_upgrade_banner": true
+      },
+      "sample_user": { "name": "無料ユーザー", "email": "free@example.com" }
+    },
+    {
+      "id": "pro",
+      "name": "Proユーザー",
+      "description": "全機能を利用可能",
+      "permissions": ["create", "read", "update", "delete"],
+      "accessible_screens": ["全て"],
+      "is_default": true,
+      "sample_user": { "name": "Proユーザー", "email": "pro@example.com" }
+    }
+  ],
+
+  "relations": [
+    {
+      "from": "Slide",
+      "to": "User",
+      "type": "N:1",
+      "foreign_key": "user_id",
+      "description": "スライドは1人のユーザーに属する"
+    }
+  ],
+
+  "additional_requirements": [
+    "スライド生成時のプログレス表示（0-100%）",
+    "生成中にリアルタイムでプレビューを更新",
+    "PPTXとPDF両方でのエクスポート対応",
+    "スライドの共有リンク生成機能"
+  ],
+  "extracted_at": "2025-01-09T00:00:00Z",
+  "confidence": "high",
+  "missing_info": []
+}

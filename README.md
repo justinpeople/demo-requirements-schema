@@ -35,7 +35,7 @@ demo-requirements-schema/
 
 ```bash
 cd ~/projects
-git clone https://github.com/japagate/demo-requirements-schema.git
+git clone https://github.com/justinpeople/demo-requirements-schema.git
 ```
 
 ### 2. 環境変数を設定（オプション）

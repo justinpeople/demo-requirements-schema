@@ -1,0 +1,334 @@
+{
+  "project_name": "顧客管理システム",
+  "version": "1.0.0",
+
+  "screens": [
+    {
+      "id": "dashboard",
+      "name": "ダッシュボード",
+      "description": "営業成績と顧客状況の概要を表示",
+      "priority": "must",
+      "path": "/",
+      "layout": "dashboard",
+      "components": [
+        {
+          "id": "stats-cards",
+          "type": "stats",
+          "position": "main",
+          "stats": [
+            { "label": "総顧客数", "value_source": "customers.total", "format": "number" },
+            { "label": "今月の商談", "value_source": "deals.this_month", "format": "number", "trend": true },
+            { "label": "成約率", "value_source": "deals.conversion_rate", "format": "percent" },
+            { "label": "売上目標達成率", "value_source": "revenue.achievement", "format": "percent", "trend": true }
+          ]
+        },
+        {
+          "id": "deals-chart",
+          "type": "chart",
+          "position": "main",
+          "title": "商談推移",
+          "chart_type": "line"
+        },
+        {
+          "id": "recent-activities",
+          "type": "list",
+          "position": "sidebar",
+          "title": "最近のアクティビティ"
+        }
+      ],
+      "actions": {
+        "primary": { "label": "新規顧客", "icon": "plus", "action": "navigate:/customers/new" }
+      }
+    },
+    {
+      "id": "customer-list",
+      "name": "顧客一覧",
+      "description": "登録されている顧客の一覧表示・検索",
+      "priority": "must",
+      "path": "/customers",
+      "layout": "list",
+      "components": [
+        {
+          "id": "customer-table",
+          "type": "table",
+          "position": "main",
+          "columns": [
+            { "key": "name", "label": "顧客名", "type": "link", "link_to": "/customers/{id}", "sortable": true },
+            { "key": "company", "label": "会社名", "type": "text", "sortable": true },
+            { "key": "email", "label": "メール", "type": "text" },
+            { "key": "status", "label": "ステータス", "type": "badge", "color_map": { "見込み": "yellow", "商談中": "blue", "成約": "green", "失注": "gray" }, "filterable": true },
+            { "key": "last_contact", "label": "最終連絡", "type": "date", "sortable": true },
+            { "key": "actions", "label": "", "type": "actions" }
+          ],
+          "pagination": "numbered",
+          "row_actions": ["view", "edit", "delete"]
+        }
+      ],
+      "responsive": {
+        "mobile": { "table_to_cards": true }
+      },
+      "actions": {
+        "primary": { "label": "新規顧客", "icon": "plus", "action": "navigate:/customers/new" }
+      }
+    },
+    {
+      "id": "customer-form",
+      "name": "顧客登録フォーム",
+      "description": "新規顧客情報の入力フォーム",
+      "priority": "must",
+      "path": "/customers/new",
+      "layout": "form-centered",
+      "components": [
+        {
+          "id": "customer-form",
+          "type": "form",
+          "position": "main",
+          "fields": [
+            { "name": "name", "label": "顧客名", "type": "text", "required": true, "placeholder": "山田太郎" },
+            { "name": "company", "label": "会社名", "type": "text", "placeholder": "株式会社サンプル" },
+            { "name": "email", "label": "メールアドレス", "type": "email", "required": true },
+            { "name": "phone", "label": "電話番号", "type": "tel" },
+            { "name": "status", "label": "ステータス", "type": "select", "options": [
+              { "value": "prospect", "label": "見込み" },
+              { "value": "negotiating", "label": "商談中" },
+              { "value": "closed", "label": "成約" }
+            ]},
+            { "name": "notes", "label": "メモ", "type": "textarea", "col_span": 2 }
+          ],
+          "submit_label": "登録する"
+        }
+      ]
+    },
+    {
+      "id": "customer-detail",
+      "name": "顧客詳細",
+      "description": "顧客の詳細情報と商談履歴",
+      "priority": "must",
+      "path": "/customers/{id}",
+      "layout": "detail",
+      "parent_screen": "customer-list",
+      "components": [
+        {
+          "id": "customer-info",
+          "type": "card",
+          "position": "main",
+          "title": "基本情報"
+        },
+        {
+          "id": "deal-history",
+          "type": "timeline",
+          "position": "main",
+          "title": "商談履歴"
+        },
+        {
+          "id": "quick-actions",
+          "type": "card",
+          "position": "sidebar",
+          "title": "クイックアクション"
+        }
+      ],
+      "actions": {
+        "primary": { "label": "編集", "icon": "edit", "action": "navigate:/customers/{id}/edit" },
+        "secondary": [
+          { "label": "商談を追加", "icon": "plus", "action": "open_modal:add_deal" }
+        ]
+      }
+    }
+  ],
+
+  "design": {
+    "references": [
+      { "name": "Salesforce", "like": "情報が整理されていて見やすい" },
+      { "name": "HubSpot", "like": "色使いがきれい" }
+    ],
+    "keywords": ["プロフェッショナル", "シンプル", "見やすい"],
+    "avoid": ["ごちゃごちゃ", "派手すぎる"],
+    "tone": "professional",
+    "colors": {
+      "primary": "#3B82F6",
+      "success": "#10B981",
+      "warning": "#F59E0B",
+      "error": "#EF4444",
+      "background": "#FFFFFF",
+      "foreground": "#0F172A"
+    },
+    "dark_mode": "toggle"
+  },
+
+  "entities": [
+    {
+      "name": "Customer",
+      "japanese_name": "顧客",
+      "fields": [
+        { "name": "id", "type": "string", "japanese_name": "ID", "required": true, "auto_generate": "uuid" },
+        { "name": "name", "type": "string", "japanese_name": "顧客名", "required": true, "searchable": true },
+        { "name": "company", "type": "string", "japanese_name": "会社名", "required": false, "searchable": true },
+        { "name": "email", "type": "email", "japanese_name": "メール", "required": true },
+        { "name": "phone", "type": "phone", "japanese_name": "電話番号", "required": false },
+        { "name": "status", "type": "enum", "japanese_name": "ステータス", "required": true, "enum_values": ["見込み", "商談中", "成約", "失注"], "display": { "component": "badge", "color_map": { "見込み": "yellow", "商談中": "blue", "成約": "green", "失注": "gray" }}},
+        { "name": "notes", "type": "string", "japanese_name": "メモ", "required": false },
+        { "name": "created_at", "type": "datetime", "japanese_name": "登録日", "required": true, "auto_generate": "timestamp" }
+      ],
+      "sample_count": 20,
+      "sample_data": [
+        { "id": "1", "name": "山田太郎", "company": "株式会社サンプル", "email": "yamada@example.com", "status": "商談中" },
+        { "id": "2", "name": "佐藤花子", "company": "テスト株式会社", "email": "sato@example.com", "status": "見込み" }
+      ],
+      "display_rules": {
+        "title_field": "name",
+        "subtitle_field": "company",
+        "badge_field": "status"
+      },
+      "search_fields": ["name", "company", "email"],
+      "default_sort": { "field": "created_at", "order": "desc" },
+      "filter_fields": [
+        { "field": "status", "type": "multi-select", "label": "ステータス" }
+      ]
+    },
+    {
+      "name": "Deal",
+      "japanese_name": "商談",
+      "fields": [
+        { "name": "id", "type": "string", "japanese_name": "ID", "required": true, "auto_generate": "uuid" },
+        { "name": "title", "type": "string", "japanese_name": "件名", "required": true },
+        { "name": "customer_id", "type": "relation", "japanese_name": "顧客", "required": true, "relation_to": "Customer" },
+        { "name": "amount", "type": "number", "japanese_name": "金額", "required": false, "display": { "component": "currency", "format": "¥{value:,}" }},
+        { "name": "stage", "type": "enum", "japanese_name": "ステージ", "required": true, "enum_values": ["初回接触", "提案", "見積", "交渉", "成約", "失注"] },
+        { "name": "expected_close", "type": "date", "japanese_name": "成約予定日", "required": false },
+        { "name": "created_at", "type": "datetime", "japanese_name": "作成日", "required": true, "auto_generate": "timestamp" }
+      ],
+      "sample_count": 30,
+      "display_rules": {
+        "title_field": "title",
+        "badge_field": "stage"
+      }
+    }
+  ],
+
+  "workflows": [
+    {
+      "id": "wf-new-customer",
+      "name": "新規顧客登録",
+      "trigger": "新しい見込み客の情報を登録したい時",
+      "goal": "顧客データベースに新規顧客を追加する",
+      "is_demo_scenario": true,
+      "steps": [
+        {
+          "order": 1,
+          "screen": "customer-list",
+          "action": "右上の「新規顧客」ボタンをクリック",
+          "expected_result": "顧客登録フォームに遷移",
+          "guide_message": "新規顧客ボタンをクリックしてください"
+        },
+        {
+          "order": 2,
+          "screen": "customer-form",
+          "action": "顧客情報を入力",
+          "expected_result": "フォームが入力された状態",
+          "pre_filled": { "name": "田中一郎", "company": "デモ株式会社", "email": "tanaka@demo.com" },
+          "highlight_fields": ["name", "email"]
+        },
+        {
+          "order": 3,
+          "screen": "customer-form",
+          "action": "「登録する」ボタンをクリック",
+          "expected_result": "顧客一覧に戻り、新しい顧客が表示される"
+        }
+      ],
+      "success_behavior": {
+        "celebration": "toast",
+        "message": "顧客を登録しました",
+        "redirect_to": "/customers",
+        "redirect_delay_ms": 1500
+      },
+      "error_scenarios": [
+        {
+          "name": "必須項目エラー",
+          "trigger": "名前またはメールが未入力",
+          "expected_behavior": "送信ボタンが無効化",
+          "ui_feedback": "エラーメッセージがフィールド下に表示",
+          "error_type": "validation"
+        }
+      ],
+      "demo_data": {
+        "name": "田中一郎",
+        "company": "デモ株式会社",
+        "email": "tanaka@demo.com",
+        "phone": "03-1234-5678",
+        "status": "prospect"
+      },
+      "estimated_duration_seconds": 30
+    }
+  ],
+
+  "navigation": {
+    "sidebar": {
+      "style": "full",
+      "position": "left",
+      "width": 240,
+      "items": [
+        { "id": "dashboard", "icon": "home", "label": "ダッシュボード", "path": "/" },
+        { "id": "customers", "icon": "users", "label": "顧客管理", "path": "/customers", "badge": { "type": "count", "source": "customers.pending_count" }},
+        { "id": "deals", "icon": "briefcase", "label": "商談管理", "path": "/deals" },
+        { "id": "reports", "icon": "bar-chart", "label": "レポート", "path": "/reports" }
+      ],
+      "footer_items": [
+        { "id": "settings", "icon": "settings", "label": "設定", "path": "/settings" }
+      ],
+      "show_user_info": true,
+      "user_info_position": "bottom"
+    },
+    "breadcrumb": {
+      "show": true,
+      "include_home": true,
+      "separator": "chevron"
+    },
+    "mobile": {
+      "navigation_type": "hamburger",
+      "show_back_button": true
+    }
+  },
+
+  "roles": [
+    {
+      "id": "admin",
+      "name": "管理者",
+      "description": "全ての機能にアクセス可能",
+      "permissions": ["create", "read", "update", "delete"],
+      "accessible_screens": ["全て"],
+      "sample_user": { "name": "管理者", "email": "admin@example.com" }
+    },
+    {
+      "id": "sales",
+      "name": "営業担当",
+      "description": "顧客と商談の閲覧・編集が可能",
+      "permissions": ["create", "read", "update"],
+      "accessible_screens": ["dashboard", "customer-list", "customer-detail", "customer-form"],
+      "ui_differences": {
+        "hide_elements": ["delete-button"],
+        "disable_actions": ["delete"]
+      },
+      "sample_user": { "name": "営業太郎", "email": "sales@example.com" }
+    }
+  ],
+
+  "relations": [
+    {
+      "from": "Deal",
+      "to": "Customer",
+      "type": "N:1",
+      "foreign_key": "customer_id",
+      "description": "商談は1人の顧客に属する",
+      "display": {
+        "inline": true,
+        "link_to_detail": true,
+        "show_count": true
+      }
+    }
+  ],
+
+  "additional_requirements": [],
+  "extracted_at": "2024-01-01T00:00:00Z",
+  "confidence": "high",
+  "missing_info": []
+}

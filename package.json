@@ -1,0 +1,19 @@
+{
+  "name": "demo-requirements-schema",
+  "version": "1.0.0",
+  "description": "デモアプリケーション自動生成のための要件定義スキーマ",
+  "main": "types/demo-requirements.ts",
+  "types": "types/demo-requirements.ts",
+  "exports": {
+    "./types": "./types/demo-requirements.ts",
+    "./defaults": "./defaults/index.ts"
+  },
+  "keywords": [
+    "demo",
+    "requirements",
+    "schema",
+    "typescript"
+  ],
+  "author": "Japagate",
+  "license": "MIT"
+}
